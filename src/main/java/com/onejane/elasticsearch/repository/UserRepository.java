@@ -1,6 +1,8 @@
 package com.onejane.elasticsearch.repository;
 
 import com.onejane.elasticsearch.bean.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;
 
@@ -33,4 +35,12 @@ public interface UserRepository extends ElasticsearchRepository<User, Integer> {
      * @return
      */
     User findUserById(Integer id);
+
+    /**
+     * 根据用户名称搜索，并按照时间倒序
+     * @param name
+     * @param pageable
+     * @return
+     */
+    Page<User> findUserByNameOrderByCreateTimeDesc(String name, Pageable pageable);
 }

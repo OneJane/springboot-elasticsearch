@@ -5,6 +5,7 @@ import com.onejane.elasticsearch.bean.EsPage;
 import com.onejane.elasticsearch.bean.User;
 import com.onejane.elasticsearch.repository.UserRepository;
 import com.onejane.elasticsearch.service.UserService;
+import com.onejane.elasticsearch.util.DateUtil;
 import com.onejane.elasticsearch.util.ElasticSearchUtil;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Index;
@@ -15,10 +16,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +30,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @program: springboot-elasticsearch
@@ -148,12 +150,18 @@ public class UserRepositoryTests {
     @Test
     public void insertData() {
         List<IndexQuery> queryList = new ArrayList<>();
-        for (int i = 0; i < 500000; i++) {
+        for (int i = 0; i < 2; i++) {
             User user = new User();
             user.setId(i);
             user.setName(i % 2 == 0 ? "洗衣机" + i : "空调" + RandomStringUtils.randomAlphanumeric(10));
             user.setAddress(RandomStringUtils.randomAlphanumeric(5));
             user.setSex(new Random().nextInt(10));
+            user.setCreateTime(DateUtil.randomDate("1970-01-01 00:00:00","2020-01-01 00:00:00"));
+            user.setComment(i % 2 == 0 ? "GitLab系统" + i : "OA办公系统" + RandomStringUtils.randomAlphanumeric(10));
+            HashMap<String,String> location = new HashMap<>();
+            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
+            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
+            user.setLocation(location);
 
             IndexQuery indexQuery =
                     new IndexQueryBuilder()
@@ -287,25 +295,45 @@ public class UserRepositoryTests {
     @Test
     public void testQueryPage() {
 
+        // 单条件
         SearchQuery searchQuery = new NativeSearchQueryBuilder()
 //                .withQuery(QueryBuilders.matchQuery("name", "李三"))  //对查询条件进行分词，之后再查询 分词
 //                .withQuery(QueryBuilders.matchPhraseQuery("name", "刘周健")) //对查询条件不分词，当做一个整体查询 精确匹配
-                .withQuery(QueryBuilders.termQuery("sex", 1)) //精确匹配
-                .withQuery(QueryBuilders.multiMatchQuery("18", "address", "name")) // 多字段查询
+//                .withQuery(QueryBuilders.termQuery("sex", 1)) //精确匹配
+//                .withQuery(QueryBuilders.multiMatchQuery("18", "address", "name")) // 多字段查询
                 .withQuery(QueryBuilders.wildcardQuery("name", "*空调*"))
-                .withPageable(PageRequest.of(1, 10)) // 分页
+//                .withPageable(PageRequest.of(0, 10)) // 分页
                 .build();
         searchQuery.addIndices("info_repository");
 
 //        BoolQueryBuilder filter = QueryBuilders.boolQuery();
 //        BoolQueryBuilder boolQueryLike = QueryBuilders.boolQuery();
 //        QueryBuilder name = QueryBuilders.wildcardQuery("name", "*空调*");
-//        boolQueryLike.should(name);
+//        boolQueryLike.should(name); // must
 //        filter.must(boolQueryLike);
 //        SearchQuery searchQuery = new NativeSearchQuery(filter);
 //        searchQuery.setPageable(PageRequest.of(0, 10));
 
-        Page<User> page = userRepository.search(searchQuery);
+        // 多条件
+//        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+//        if(!HelperUtil.isEmpty(dto.getExtra())){
+//            QueryBuilder extraBuilder = QueryBuilders.matchQuery("extra", dto.getExtra());
+//            boolQueryBuilder.must(extraBuilder);
+//        }
+//        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+//                .withQuery(boolQueryBuilder)
+//                .withPageable(PageRequest.of(dto.getPage()-1, dto.getSize()))
+//                .build();
+        QueryBuilder queryBuilder= QueryBuilders.boolQuery()
+                .must(QueryBuilders.wildcardQuery("name","*洗衣机0*"))
+                .must(QueryBuilders.matchQuery("sex",5));
+
+        SearchQuery searchQuery1 = new NativeSearchQueryBuilder()
+                .withQuery(queryBuilder).build();
+
+        EsPage<User> dataPage = util.searchDataPage("info_repository","user",1, 2,"", searchQuery1, User.class);
+
+        Page<User> page = userRepository.search(searchQuery1);
         List<User> users = page.getContent();
         for (User user : users) {
             System.out.println(user);
@@ -318,6 +346,35 @@ public class UserRepositoryTests {
 
         User user = userRepository.findUserById(3);
         System.out.println("按照id查询的结果：" + user);
+
+        Page<User> user1 = userRepository.findUserByNameOrderByCreateTimeDesc("*洗衣机*", PageRequest.of(1, 10));
+        System.out.println("按照id查询分页结果："+user1.getContent().toString());
+
+
+        // 全文检索
+        NativeSearchQueryBuilder QueryBuilder = new NativeSearchQueryBuilder();
+        QueryBuilder.withQuery(QueryBuilders.matchQuery("name","空调").operator(Operator.AND)); // 给查询构造器添加条件
+        QueryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"title","price"},null)); // 结果过滤
+        QueryBuilder.withSort(SortBuilders.fieldSort("price").order(SortOrder.ASC)); // 排序
+        QueryBuilder.withPageable(PageRequest.of(1,10)); // 分页
+        Page<User> result = userRepository.search(QueryBuilder.build());
+
+
+        // 聚合查询
+        NativeSearchQueryBuilder QueryBuilder1 = new NativeSearchQueryBuilder();
+        //添加聚合add, 可以聚合多次
+        QueryBuilder.addAggregation(AggregationBuilders.terms("popular_brand").field("brand"));
+        AggregatedPage<User> result1 = elasticsearchTemplate.queryForPage(QueryBuilder.build(), User.class);
+        // 解析聚合
+        Aggregations aggregations = result1.getAggregations();
+        // 指定名称聚合
+        StringTerms agg = aggregations.get("popular_brand");
+        List<StringTerms.Bucket> buckets = agg.getBuckets();
+        //遍历buckets
+        for (StringTerms.Bucket bucket : buckets) {
+            System.out.println(bucket.getKeyAsString());
+            System.out.println(bucket.getDocCount());
+        }
     }
 
 
@@ -328,7 +385,10 @@ public class UserRepositoryTests {
     public void scroll() {
         Date begin1 = new Date();
         QueryBuilder queryBuilder = QueryBuilders.termQuery("sex", 0);
-        EsPage<User> dataPage = util.searchDataPage("info_repository", "user", 10001, 5, "", queryBuilder, User.class);//全部查询
+        SearchQuery searchQuery1 = new NativeSearchQueryBuilder()
+                .withQuery(queryBuilder)
+                .build();
+        EsPage<User> dataPage = util.searchDataPage("info_repository", "user", 10001, 5, "", searchQuery1, User.class);//全部查询
         System.out.println("总数：" + dataPage.getRecordCount() + ";查询结果：" + dataPage.getRecordList().toString());
         Date end1 = new Date();
         System.out.println("耗时: " + (end1.getTime() - begin1.getTime()));

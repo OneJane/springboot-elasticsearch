@@ -26,14 +26,13 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
 import org.springframework.data.elasticsearch.core.SearchResultMapper;
@@ -42,6 +41,7 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -77,7 +77,7 @@ public class ElasticSearchUtil<T> {
      *
      * @param index 索引，类似数据库
      * @return boolean
-     * @auther: LHL
+     * @auther: Onejane
      */
     public static boolean isIndexExist(String index) {
         boolean exists = false;
@@ -99,7 +99,7 @@ public class ElasticSearchUtil<T> {
      *
      * @param: indexName  索引，类似数据库
      * @return: boolean
-     * @auther: LHL
+     * @auther: Onejane
      */
     public static boolean createIndex(String indexName) {
         if (!isIndexExist(indexName)) {
@@ -158,7 +158,7 @@ public class ElasticSearchUtil<T> {
      * @param indexName 索引，类似数据库
      * @param id        id
      * @return String
-     * @auther: LHL
+     * @auther: Onejane
      */
     public static String addData(XContentBuilder content, String indexName, String typeName, String id) {
         IndexResponse response = null;
@@ -179,7 +179,7 @@ public class ElasticSearchUtil<T> {
      * @param list  要批量增加的数据
      * @param index 索引，类似数据库
      * @return
-     * @auther: LHL
+     * @auther: Onejane
      */
     public void insertBatch(String index, String typeName, List<EsEntity> list) {
         BulkRequest request = new BulkRequest();
@@ -199,7 +199,7 @@ public class ElasticSearchUtil<T> {
      * @param builder   要删除的数据  new TermQueryBuilder("userId", userId)
      * @param indexName 索引，类似数据库
      * @return
-     * @auther: LHL
+     * @auther: Onejane
      */
     public void deleteByQuery(String indexName, String typeName, SearchSourceBuilder builder) throws IOException {
         SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
@@ -232,7 +232,7 @@ public class ElasticSearchUtil<T> {
      * @param idList 要删除的数据id
      * @param index  索引，类似数据库
      * @return
-     * @auther: LHL
+     * @auther: Onejane
      */
     public static <T> void deleteBatch(String index, String type, Collection<T> idList) {
         BulkRequest request = new BulkRequest();
@@ -275,14 +275,10 @@ public class ElasticSearchUtil<T> {
      * @param query     查询条件
      * @return 结果
      */
-    public EsPage<T> searchDataPage(String index, String type, int startPage, int pageSize, String sortField, QueryBuilder query, Class<T> tClass) {
-        SearchQuery searchQuery = new NativeSearchQueryBuilder()
-                .withQuery(query)
-                .withIndices(index)
-                .withSort(SortBuilders.fieldSort(sortField).order(SortOrder.ASC))
-                .withTypes(type)
-                .withPageable(PageRequest.of(startPage, pageSize))//从startPage页开始查，每页pageSize个结果
-                .build();
+    public EsPage<T> searchDataPage(String index, String type, int startPage, int pageSize, String sortField, SearchQuery searchQuery, Class<T> tClass) {
+        if(!StringUtils.isEmpty(sortField)){
+            searchQuery.addSort(new Sort(Sort.Direction.DESC,sortField));
+        }
         if (startPage <= 0) {
             startPage = 0;
         }

@@ -1,9 +1,8 @@
-package com.onejane.elasticsearch;
+package com.onejane.elasticsearch.repository;
 
 import com.onejane.elasticsearch.bean.EsEntity;
 import com.onejane.elasticsearch.bean.EsPage;
 import com.onejane.elasticsearch.bean.User;
-import com.onejane.elasticsearch.repository.UserRepository;
 import com.onejane.elasticsearch.service.UserService;
 import com.onejane.elasticsearch.util.DateUtil;
 import com.onejane.elasticsearch.util.ElasticSearchUtil;
@@ -16,7 +15,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;

@@ -17,6 +17,7 @@ public class StudentRepositoryTest {
     @Autowired
     StudentRepository studentRepository;
 
+
     @Test
     public void add(){
         Student user = new Student();
@@ -24,4 +25,5 @@ public class StudentRepositoryTest {
         user.setAge(6);
         studentRepository.save(user);
     }
+
 }

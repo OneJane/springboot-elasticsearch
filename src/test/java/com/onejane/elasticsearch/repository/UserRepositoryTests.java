@@ -2,6 +2,7 @@ package com.onejane.elasticsearch.repository;
 
 import com.onejane.elasticsearch.bean.EsEntity;
 import com.onejane.elasticsearch.bean.EsPage;
+import com.onejane.elasticsearch.bean.Student;
 import com.onejane.elasticsearch.bean.User;
 import com.onejane.elasticsearch.service.UserService;
 import com.onejane.elasticsearch.util.DateUtil;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -143,6 +145,14 @@ public class UserRepositoryTests {
         query.setType("user");
         query.setObject(user);
         elasticsearchTemplate.index(query);
+
+        Student student = new Student();
+        student.setAge(1);
+        student.setId(1);
+        student.setName("onejane");
+        query.setIndexName("student");
+        query.setType("student");
+        elasticsearchTemplate.index(query);
     }
 
 
@@ -152,7 +162,7 @@ public class UserRepositoryTests {
     @Test
     public void insertData() {
         List<IndexQuery> queryList = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 2000; i++) {
             User user = new User();
             user.setId(i);
             user.setName(i % 2 == 0 ? "洗衣机" + i : "空调" + RandomStringUtils.randomAlphanumeric(10));
@@ -160,10 +170,10 @@ public class UserRepositoryTests {
             user.setSex(new Random().nextInt(10));
             user.setCreateTime(DateUtil.randomDate("1970-01-01 00:00:00","2020-01-01 00:00:00"));
             user.setComment(i % 2 == 0 ? "GitLab系统" + i : "OA办公系统" + RandomStringUtils.randomAlphanumeric(10));
-            HashMap<String,String> location = new HashMap<>();
-            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
-            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
-            user.setLocation(location);
+//            HashMap<String,String> location = new HashMap<>();
+//            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
+//            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
+//            user.setLocation(location);
 
             IndexQuery indexQuery =
                     new IndexQueryBuilder()
@@ -332,8 +342,8 @@ public class UserRepositoryTests {
 
         SearchQuery searchQuery1 = new NativeSearchQueryBuilder()
                 .withQuery(queryBuilder).build();
-
-        EsPage<User> dataPage = util.searchDataPage("info_repository","user",1, 2,"", searchQuery1, User.class);
+        searchQuery1.addSort(new Sort(Sort.Direction.DESC,"name"));
+        EsPage<User> dataPage = util.searchDataPage( searchQuery1, User.class);
 
         Page<User> page = userRepository.search(searchQuery1);
         List<User> users = page.getContent();
@@ -389,8 +399,10 @@ public class UserRepositoryTests {
         QueryBuilder queryBuilder = QueryBuilders.termQuery("sex", 0);
         SearchQuery searchQuery1 = new NativeSearchQueryBuilder()
                 .withQuery(queryBuilder)
+                .withPageable(PageRequest.of(0, 100))
                 .build();
-        EsPage<User> dataPage = util.searchDataPage("info_repository", "user", 10001, 5, "", searchQuery1, User.class);//全部查询
+//        searchQuery1.addSort(new Sort(Sort.Direction.DESC,"sex"));
+        EsPage<User> dataPage = util.searchDataPage(searchQuery1, User.class);//全部查询
         System.out.println("总数：" + dataPage.getRecordCount() + ";查询结果：" + dataPage.getRecordList().toString());
         Date end1 = new Date();
         System.out.println("耗时: " + (end1.getTime() - begin1.getTime()));

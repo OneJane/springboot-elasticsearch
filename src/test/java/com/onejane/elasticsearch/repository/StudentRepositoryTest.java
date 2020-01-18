@@ -20,10 +20,14 @@ public class StudentRepositoryTest {
 
     @Test
     public void add(){
-        Student user = new Student();
-        user.setName("onejane"+ RandomStringUtils.randomAlphanumeric(5));
-        user.setAge(6);
-        studentRepository.save(user);
+        for (int i = 0; i < 2000; i++) {
+            Student user = new Student();
+            user.setId(i);
+            user.setName("onejane"+ RandomStringUtils.randomAlphanumeric(5));
+            user.setAge(6);
+            studentRepository.save(user);
+        }
+
     }
 
 }

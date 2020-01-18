@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
 import org.springframework.data.elasticsearch.core.SearchResultMapper;
@@ -41,7 +40,6 @@ import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPa
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -275,10 +273,12 @@ public class ElasticSearchUtil<T> {
      * @param query     查询条件
      * @return 结果
      */
-    public EsPage<T> searchDataPage(String index, String type, int startPage, int pageSize, String sortField, SearchQuery searchQuery, Class<T> tClass) {
-        if(!StringUtils.isEmpty(sortField)){
-            searchQuery.addSort(new Sort(Sort.Direction.DESC,sortField));
-        }
+    public EsPage<T> searchDataPage(SearchQuery searchQuery, Class<T> tClass) {
+//        if(!StringUtils.isEmpty(sortField)){
+//            searchQuery.addSort(new Sort(Sort.Direction.DESC,sortField));
+//        }
+        Integer startPage = searchQuery.getPageable().getPageSize();
+        Integer pageSize = searchQuery.getPageable().getPageNumber();
         if (startPage <= 0) {
             startPage = 0;
         }

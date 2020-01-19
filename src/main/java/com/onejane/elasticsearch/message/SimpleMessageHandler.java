@@ -7,10 +7,7 @@ import com.onejane.elasticsearch.entry.EntryHandlerFactory;
 
 import java.util.List;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public class SimpleMessageHandler implements MessageHandler<Message>{
 
     private EntryHandlerFactory entryHandlerFactory;

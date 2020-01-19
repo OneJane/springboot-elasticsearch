@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author: shimh
- * @create: 2019年11月
- **/
+
 public abstract class AbstractCanalClient {
 
     protected final static Logger logger = LoggerFactory.getLogger(AbstractCanalClient.class);

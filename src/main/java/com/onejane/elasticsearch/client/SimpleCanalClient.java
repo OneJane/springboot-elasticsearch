@@ -5,10 +5,7 @@ import com.onejane.elasticsearch.message.MessageHandler;
 
 import java.net.InetSocketAddress;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public class SimpleCanalClient extends AbstractCanalClient {
 
     public SimpleCanalClient(String ip, Integer port, String destination, String username, String password, MessageHandler messageHandler) {

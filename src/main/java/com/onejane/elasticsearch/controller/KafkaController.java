@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * @author: shimh
- * @create: 2019年11月
- **/
+
 @Slf4j
 @RestController
 public class KafkaController {

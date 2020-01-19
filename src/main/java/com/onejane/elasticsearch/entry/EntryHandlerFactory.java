@@ -3,10 +3,7 @@ package com.onejane.elasticsearch.entry;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public class EntryHandlerFactory {
 
     private Map<String, AbstractEntryHandler> handlerMap = new HashMap<>();

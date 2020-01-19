@@ -5,10 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 @ConfigurationProperties("canal")
 @Data
 public class CanalProperties {

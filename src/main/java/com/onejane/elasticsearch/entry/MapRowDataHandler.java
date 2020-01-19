@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public class MapRowDataHandler implements AbstractEntryHandler.RowDataHandler<Map<String, String>> {
 
 

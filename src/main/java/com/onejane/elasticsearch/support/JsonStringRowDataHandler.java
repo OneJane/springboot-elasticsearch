@@ -7,10 +7,7 @@ import com.onejane.elasticsearch.entry.AbstractEntryHandler;
 
 import java.util.List;
 
-/**
- * @author: shimh
- * @create: 2019年11月
- **/
+
 public class JsonStringRowDataHandler implements AbstractEntryHandler.RowDataHandler<String>{
 
     @Override

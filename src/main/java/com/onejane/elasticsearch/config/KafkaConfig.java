@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 
-/**
- * @author: shimh
- * @create: 2019年11月
- **/
+
 @Configuration
 public class KafkaConfig {
 

@@ -8,10 +8,7 @@ import org.elasticsearch.action.index.IndexRequest;
 
 import java.util.Map;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public class ElasticSearchEntryHandler extends AbstractEntryHandler<Map<String, String>> {
 
     private String index = "test";

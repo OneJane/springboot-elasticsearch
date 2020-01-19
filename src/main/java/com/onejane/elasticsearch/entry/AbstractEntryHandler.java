@@ -4,10 +4,7 @@ import com.alibaba.otter.canal.protocol.CanalEntry;
 
 import java.util.List;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 public abstract class AbstractEntryHandler<T> {
 
     public interface RowDataHandler<T> {

@@ -18,10 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
 
-/**
- * @author: shimh
- * @create: 2019年10月
- **/
+
 @Configuration
 @EnableConfigurationProperties(CanalProperties.class)
 @Slf4j

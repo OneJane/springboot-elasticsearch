@@ -3,10 +3,7 @@ package com.onejane.elasticsearch.support;
 import com.onejane.elasticsearch.entry.AbstractEntryHandler;
 import org.springframework.kafka.core.KafkaTemplate;
 
-/**
- * @author: shimh
- * @create: 2019年11月
- **/
+
 public class KafkaSearchEntryHandler extends AbstractEntryHandler<String> {
 
     KafkaTemplate kafkaTemplate;

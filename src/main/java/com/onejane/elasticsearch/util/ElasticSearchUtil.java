@@ -47,7 +47,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @program: springboot-elasticsearch
+ * @program: motor_es_common
  * @description: es常用工具类
  * @author: OneJane
  * @create: 2020-01-12 14:23
@@ -267,21 +267,19 @@ public class ElasticSearchUtil<T> {
     /**
      * 使用分词查询  排序 ,并分页
      *
-     * @param index     索引名称
-     * @param startPage 当前页
-     * @param pageSize  每页显示条数
-     * @param query     查询条件
      * @return 结果
      */
     public EsPage<T> searchDataPage(SearchQuery searchQuery, Class<T> tClass) {
-//        if(!StringUtils.isEmpty(sortField)){
-//            searchQuery.addSort(new Sort(Sort.Direction.DESC,sortField));
-//        }
-        Integer startPage = searchQuery.getPageable().getPageSize();
-        Integer pageSize = searchQuery.getPageable().getPageNumber();
-        if (startPage <= 0) {
-            startPage = 0;
+        Integer startPage = 0;
+        Integer pageSize = 10;
+        if (searchQuery.getPageable().isPaged()) {
+            pageSize = searchQuery.getPageable().getPageSize();
+            startPage = searchQuery.getPageable().getPageNumber();
+            if (startPage <= 0) {
+                startPage = 0;
+            }
         }
+
         //如果 pageSize是10 那么startPage>9990 (10000-pagesize) 如果 20  那么 >9980 如果 50 那么>9950
         //深度分页
         if (startPage > (10000 - pageSize)) {
@@ -376,6 +374,38 @@ public class ElasticSearchUtil<T> {
 
         return list;
 
+    }
+
+
+    /**
+     * search
+     *
+     * @param searchQuery
+     * @param cls
+     * @return List<T>
+     */
+    public <T> List<T> queryForList(SearchQuery searchQuery, Class<T> cls) {
+        return elasticsearchTemplate.queryForList(searchQuery, cls);
+    }
+
+
+    /**
+     * 查询全部数据
+     * @param searchQuery
+     * @param tClass
+     * @return
+     */
+    public EsPage<T> searchAll(SearchQuery searchQuery, Class<T> tClass) {
+        List<T> entityList = new ArrayList<T>();
+        ScrolledPage<T> scroll = (ScrolledPage<T>) elasticsearchTemplate.startScroll(SCROLL_TIMEOUT, searchQuery, tClass, searchResultMapper);
+        while (scroll.hasContent()) {
+            entityList.addAll((List<T>) scroll.getContent());
+            //取下一页，scrollId在es服务器上可能会发生变化，需要用最新的。发起continueScroll请求会重新刷新快照保留时间
+            scroll = (ScrolledPage<T>) elasticsearchTemplate.continueScroll(scroll.getScrollId(), SCROLL_TIMEOUT, tClass, searchResultMapper);
+        }
+        //及时释放es服务器资源
+        elasticsearchTemplate.clearScroll(scroll.getScrollId());
+        return new EsPage<T>(0, Math.toIntExact(scroll.getTotalElements()), Math.toIntExact(scroll.getTotalElements()), entityList);
     }
 
 

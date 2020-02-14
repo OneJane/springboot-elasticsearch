@@ -66,7 +66,7 @@ services:
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
-      - "2181"
+      - "2181:2181"
   kafka:
     image: wurstmeister/kafka
     ports:

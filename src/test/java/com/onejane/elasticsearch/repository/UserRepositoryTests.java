@@ -1,5 +1,6 @@
 package com.onejane.elasticsearch.repository;
 
+import com.alibaba.fastjson.JSONArray;
 import com.onejane.elasticsearch.bean.EsEntity;
 import com.onejane.elasticsearch.bean.EsPage;
 import com.onejane.elasticsearch.bean.Student;
@@ -13,13 +14,11 @@ import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
@@ -170,10 +169,11 @@ public class UserRepositoryTests {
             user.setSex(new Random().nextInt(10));
             user.setCreateTime(DateUtil.randomDate("1970-01-01 00:00:00","2020-01-01 00:00:00"));
             user.setComment(i % 2 == 0 ? "GitLab系统" + i : "OA办公系统" + RandomStringUtils.randomAlphanumeric(10));
-//            HashMap<String,String> location = new HashMap<>();
-//            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
-//            location.put(RandomStringUtils.randomAlphanumeric(5),RandomStringUtils.randomAlphanumeric(5));
-//            user.setLocation(location);
+            HashMap<String,String> location = new HashMap<>();
+            // 生成字段 location.dimension  location.longitude
+            location.put("longitude",RandomStringUtils.randomAlphanumeric(5));
+            location.put("dimension",RandomStringUtils.randomAlphanumeric(5));
+            user.setLocation(location);
 
             IndexQuery indexQuery =
                     new IndexQueryBuilder()
@@ -194,6 +194,30 @@ public class UserRepositoryTests {
             // 保存剩余数据 (没被1000整除)
             elasticsearchTemplate.bulkIndex(queryList);
         }
+    }
+
+    /**
+     * 查询Map
+     * 查询对象时
+     * @Field(type = FieldType.Nested,store = true)
+     * private EsMotorOrderExtra extraObj;
+     * QueryBuilder isReceiveBuilder = QueryBuilders.nestedQuery("extraObj",
+     *                     QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("extraObj.isReceive", dto.getIsReceive())), ScoreMode.Total);
+     */
+    @Test
+    public void selectMap(){
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        QueryBuilder isReceiveBuilder = QueryBuilders.nestedQuery("location",
+                QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("location.longitude", "zcQhz")), ScoreMode.Total);
+        boolQueryBuilder.must(isReceiveBuilder);
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(boolQueryBuilder)
+//                .withPageable(PageRequest.of(dto.getPage() - 1, dto.getSize()))
+//                .withSort(new FieldSortBuilder("createTime").order(SortOrder.DESC))
+                .build();
+        EsPage<User> dataPage = util.searchDataPage(searchQuery, User.class);//全部查询
+        List<User> motorOrders = dataPage.getRecordList();
+        System.out.println(JSONArray.toJSON(motorOrders).toString());
     }
 
 

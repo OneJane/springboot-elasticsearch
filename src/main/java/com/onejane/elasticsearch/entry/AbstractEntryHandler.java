@@ -4,7 +4,13 @@ import com.alibaba.otter.canal.protocol.CanalEntry;
 
 import java.util.List;
 
-
+/**
+ * canal更新mysql到es
+ * com.onejane.elasticsearch.support.KafkaSearchEntryHandler#doInsert发送kafka消息
+ * com.onejane.elasticsearch.controller.KafkaController#listenThing1接受kafka消息，并更新索引数据
+ *
+ * @param <T>
+ */
 public abstract class AbstractEntryHandler<T> {
 
     public interface RowDataHandler<T> {

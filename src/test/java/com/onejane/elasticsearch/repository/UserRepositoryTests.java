@@ -15,6 +15,8 @@ import io.searchbox.core.SearchResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -179,7 +181,7 @@ public class UserRepositoryTests {
                     new IndexQueryBuilder()
                             .withId(String.valueOf(user.getId()))
                             .withObject(user)
-                            .withIndexName("info_repository")
+                            .withIndexName("info_repository")  // .withIndexName("motor_order_v1") 起索引名 线上同步数据到motor_order_v1后，通过查询motor_order作为别名
                             .build();
 
             queryList.add(indexQuery);
@@ -194,6 +196,17 @@ public class UserRepositoryTests {
             // 保存剩余数据 (没被1000整除)
             elasticsearchTemplate.bulkIndex(queryList);
         }
+    }
+
+
+    @Test
+    public void updateData(){
+        IndexRequest indexRequest = new IndexRequest();
+        Map<String, Object> map = new HashMap<>();
+//        indexRequest.source("sex",3);
+        map.put("sex",3);
+        UpdateQuery updateQuery = new UpdateQueryBuilder().withIndexName("user").withType("user").withId("10").withClass(User.class).withIndexRequest(indexRequest).build();
+        UpdateResponse update = elasticsearchTemplate.update(updateQuery);
     }
 
     /**
@@ -263,7 +276,7 @@ public class UserRepositoryTests {
         //文档数据
         User user = new User();
         user.setId(5);
-        user.setAddress("北京");
+        user.setContent("公安部：各地校车将享最高路权");
         user.setName("独孤想败");
         user.setSex(1);
         //封装文档数据到EsEntity对象中
@@ -273,7 +286,7 @@ public class UserRepositoryTests {
 
         User user2 = new User();
         user2.setId(8);
-        user2.setAddress("北京");
+        user2.setContent("美国留给伊拉克的是个烂摊子吗");
         user2.setName("独孤求败");
         user2.setSex(0);
         EsEntity es02 = new EsEntity();
@@ -283,7 +296,7 @@ public class UserRepositoryTests {
 
         User user3 = new User();
         user3.setId(9);
-        user3.setAddress("不得北京");
+        user3.setContent("中国驻洛杉矶领事馆遭亚裔男子枪击 嫌犯已自首");
         user3.setName("不得不败");
         user3.setSex(1);
         EsEntity es03 = new EsEntity();

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2020-01-12 12:10
  **/
 @Data
-@Document(indexName = "info_repository", type = "user")
+@Document(indexName = "user", type = "user")
 public class User {
     @Id
     private Integer id;
@@ -39,8 +39,10 @@ public class User {
     @Field(type = FieldType.Text, store = true, analyzer = "ik_smart", searchAnalyzer = "ik_max_word")
     private String comment;
     @Field(type = FieldType.Nested, store = true)
-    private Map<String,String> location;
+    private Map<String,String> location; // es自动按照第一条插入的数据进行字段类型定义，多条数据插入可能存在数据类型无法转换问题
 
+    @Field(type = FieldType.Text, store = true, analyzer = "ik_max_word", searchAnalyzer = "ik_smart",index = true)
+    private String content;
 //    @Field(type = FieldType.Nested, store = true)
 //    private List<User> users;
 //

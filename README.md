@@ -139,7 +139,7 @@ vim canal.properties
 canal.id = 1
 canal.serverMode = tcp
 canal.mq.servers = 10.33.72.81:9092
-canal.destinations = example
+canal.destinations = example   可以用逗号分割
 canal.instance.filter.druid.ddl = true
 canal.instance.filter.query.dcl = true
 canal.instance.filter.query.dml = false
@@ -158,7 +158,7 @@ canal.mq.dynamicTopic=example\\..*
 
 sh bin/startup.sh
 
-
+负责发送dump协议给mysql，mysql推送binlog给canal，解析后交给mq处理
 
 
 
